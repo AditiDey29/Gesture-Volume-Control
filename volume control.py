@@ -3,10 +3,27 @@ import mediapipe as mp
 import time
 import Hand_tracking_module as htm
 import math
+import math
+import numpy as np
+from ctypes import cast, POINTER
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
 
 #############
 wcam, hcam = 800,800
 #############
+
+devices = AudioUtilities.GetSpeakers()
+interface = devices.Activate(
+    IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+volume = cast(interface, POINTER(IAudioEndpointVolume))
+# volume.GetMute()
+# volume.GetMasterVolumeLevel()
+volRange = volume.GetVolumeRange()
+
+minVol = volRange[0]
+maxVol = volRange[1]
 
 pTime = 0
 ctime = 0
@@ -35,6 +52,9 @@ while True:
 
         length = math.hypot(x2-x1,y2-y1)
         print(length)
+
+        vol = np.interp(length,[50,300],[minVol,maxVol])
+        volume.SetMasterVolumeLevel(vol, None)
 
         if length<=50:
             cv2.circle(img, (cx, cy), 15, (255,255,0), cv2.FILLED)
